@@ -11,6 +11,8 @@ import displacementImg from "@/assets/experiments/displacement-reaction.jpg";
 import reductionImg from "@/assets/experiments/reduction-reaction.jpg";
 import decompositionImg from "@/assets/experiments/decomposition-reaction.jpg";
 import acidBaseImg from "@/assets/experiments/acid-base-indicator.jpg";
+import permanganateImg from "@/assets/experiments/istockphoto-1473177722-612x612.jpg";
+
 import { ALL_EXPERIMENTS } from "@/lab/data/experiments";
 
 interface Experiment {
@@ -98,6 +100,8 @@ export const CourseCatalog = ({ userFullName, userEmail }: { userFullName: strin
       case "Reduction Reaction": return reductionImg;
       case "Decomposition Reaction": return decompositionImg;
       case "Acid-Base Indicator Reaction": return acidBaseImg;
+      case "Permanganate Reduction Reaction": return permanganateImg;
+
       default: return null;
     }
   };

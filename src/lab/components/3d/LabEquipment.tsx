@@ -21,7 +21,7 @@ interface LabEquipmentProps {
   experiment: Experiment
   onStepComplete?: (stepIndex: number, chemical: Chemical) => void
   onChemicalAdd?: (chemical: Chemical) => void
-  onReactionTrigger?: (reactionType: string, position: [number, number, number], intensity: number) => void
+  onReactionTrigger?: (reactionType: string, position: [number, number, number], intensity: number, chemicals?: string[]) => void
 }
 
 const LabEquipment = forwardRef<any, LabEquipmentProps>(function LabEquipment({ experiment, onStepComplete, onChemicalAdd, onReactionTrigger }, ref) {
@@ -75,28 +75,46 @@ const LabEquipment = forwardRef<any, LabEquipmentProps>(function LabEquipment({ 
     
     const mainBeaker = equipmentLayout.find(item => item.type === 'beaker')
     
-    if (!mainBeaker) {
-      console.warn('❌ No beaker found')
+    // For test tube experiments, use test tube instead
+    const mainContainer = mainBeaker || equipmentLayout.find(item => item.type === 'test-tube')
+    
+    if (!mainContainer) {
+      console.warn('❌ No main container found')
       processingRef.current = false
       return
     }
 
-    const currentContents = equipmentContents[mainBeaker.id] || []
+    const currentContents = equipmentContents[mainContainer.id] || []
     const alreadyExists = currentContents.some(c => c.id === chemical.id)
     
     if (alreadyExists) {
-      console.log(`⚠️ ${chemical.name} already in beaker`)
+      console.log(`⚠️ ${chemical.name} already in container`)
       processingRef.current = false
       return
     }
 
-    // Add to beaker
+    // Special case for KMnO4 reduction experiment
+    if (experiment.id === 'kmno4-reduction') {
+      // Check if oxalic acid is added before sulfuric acid
+      const hasKMnO4 = currentContents.some(c => c.id === 'kmno4')
+      const hasH2SO4 = currentContents.some(c => c.id === 'h2so4')
+      const isOxalicAcid = chemical.id === 'oxalic-acid'
+      
+      if (hasKMnO4 && isOxalicAcid && !hasH2SO4) {
+        console.log('⚠️ Warning: Add acid first to allow reduction')
+        // We could show a warning to the user here
+        // For now, we'll just log it and continue
+      }
+    }
+    
+
+    // Add to container
     setEquipmentContents(prev => {
       const updated: { [key: string]: Chemical[] } = {
         ...prev,
-        [mainBeaker.id]: [...(prev[mainBeaker.id] || []), chemical]
+        [mainContainer.id]: [...(prev[mainContainer.id] || []), chemical]
       }
-      console.log(`✅ Added ${chemical.name}. Contents:`, (updated[mainBeaker.id] || []).map((c: Chemical) => c.name))
+      console.log(`✅ Added ${chemical.name}. Contents:`, (updated[mainContainer.id] || []).map((c: Chemical) => c.name))
       return updated
     })
 
@@ -109,7 +127,7 @@ const LabEquipment = forwardRef<any, LabEquipmentProps>(function LabEquipment({ 
         
         const targetStep = incompleteSteps.find(({ step }) =>
           step.chemicals.includes(chemical.id) &&
-          step.equipment.includes('beaker')
+          step.equipment.includes(mainContainer.type)
         )
         
         if (targetStep) {
@@ -122,7 +140,7 @@ const LabEquipment = forwardRef<any, LabEquipmentProps>(function LabEquipment({ 
     // Check for reactions after adding chemical
     setTimeout(() => {
       // Get the updated equipment contents
-      const updatedContents = equipmentContents[mainBeaker.id] || []
+      const updatedContents = equipmentContents[mainContainer.id] || []
       const chemicalIds = updatedContents.map(c => c.id)
       
       console.log('🧪 Checking for reactions with chemicals:', chemicalIds)
@@ -136,7 +154,7 @@ const LabEquipment = forwardRef<any, LabEquipmentProps>(function LabEquipment({ 
         // Trigger visual effect for the reaction
         const reactionType = reactionResult.effects[0]?.type || 'color-change'
         const intensity = reactionResult.effects[0]?.intensity || 0.8
-        onReactionTrigger(reactionType, mainBeaker.position, intensity)
+        onReactionTrigger(reactionType, mainContainer.position, intensity, chemicalIds)
       } else {
         console.log('🧪 No reaction triggered')
         if (chemicalIds.includes('phenolphthalein') && chemicalIds.includes('hcl') && chemicalIds.includes('naoh')) {
@@ -149,7 +167,7 @@ const LabEquipment = forwardRef<any, LabEquipmentProps>(function LabEquipment({ 
     if (chemical.properties.state === 'liquid') {
       setActivePouring({
         fromPosition: new THREE.Vector3(-6, 1.0, 0),
-        toPosition: new THREE.Vector3(...mainBeaker.position),
+        toPosition: new THREE.Vector3(...mainContainer.position),
         chemical,
         active: true
       })

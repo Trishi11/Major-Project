@@ -1,4 +1,4 @@
-import { Experiment, ChemicalReaction } from '@/types/experiment'
+import { Experiment, ChemicalReaction } from '@/lab/types'
 
 export const EXPERIMENTS: Experiment[] = [
   {
@@ -13,7 +13,6 @@ export const EXPERIMENTS: Experiment[] = [
       'Observe the formation of salt and water',
       'Learn about exothermic reactions'
     ],
-    chemicals: [], // Moved chemicals property to correct position
     materials: [
       { equipmentType: 'beaker', quantity: 2, required: true },
       { equipmentType: 'graduated-cylinder', quantity: 2, required: true }
@@ -97,7 +96,6 @@ export const EXPERIMENTS: Experiment[] = [
       'Observe the formation of insoluble products',
       'Learn about solubility rules'
     ],
-    chemicals: [], // Moved chemicals property to correct position
     materials: [
       { equipmentType: 'test-tube', quantity: 2, required: true },
       { equipmentType: 'beaker', quantity: 1, required: true }
@@ -173,7 +171,6 @@ export const EXPERIMENTS: Experiment[] = [
       'Observe metal activity series',
       'Learn about redox reactions'
     ],
-    chemicals: [], // Moved chemicals property to correct position
     materials: [
       { equipmentType: 'beaker', quantity: 1, required: true },
       { equipmentType: 'test-tube', quantity: 1, required: true }
@@ -244,87 +241,6 @@ export const EXPERIMENTS: Experiment[] = [
   },
 
   {
-    id: 'combustion-reaction',
-    title: 'Combustion Reaction',
-    description: 'Demonstrate the combustion of methane in the presence of oxygen.',
-    difficulty: 'intermediate',
-    duration: 15,
-    category: 'gas-evolution',
-    objectives: [
-      'Understand combustion reactions',
-      'Observe the products of complete combustion',
-      'Learn about exothermic reactions'
-    ],
-    chemicals: [], // Moved chemicals property to correct position
-    materials: [
-      { equipmentType: 'beaker', quantity: 1, required: true },
-      { equipmentType: 'bunsen-burner', quantity: 1, required: true }
-    ],
-    steps: [
-      {
-        id: 'step1',
-        instruction: 'Set up Bunsen burner with gas supply',
-        equipment: ['bunsen-burner'],
-        chemicals: ['ch4'],
-        action: 'observe',
-        expectedObservation: 'Gas line connected to burner',
-        completed: false
-      },
-      {
-        id: 'step2',
-        instruction: 'Light the Bunsen burner and adjust flame',
-        equipment: ['bunsen-burner'],
-        chemicals: ['ch4', 'o2'],
-        action: 'heat',
-        expectedObservation: 'Blue flame appears',
-        completed: false
-      },
-      {
-        id: 'step3',
-        instruction: 'Observe the combustion products',
-        equipment: ['beaker'],
-        chemicals: ['co2', 'h2o'],
-        action: 'observe',
-        expectedObservation: 'Water vapor condenses, CO₂ is produced',
-        completed: false
-      }
-    ],
-    safetyNotes: [
-      'Ensure good ventilation when working with gases',
-      'Keep flammable materials away from flame',
-      'Use proper Bunsen burner technique',
-      'Never leave flame unattended'
-    ],
-    expectedResults: [
-      'Blue flame indicating complete combustion',
-      'Production of carbon dioxide and water',
-      'Heat and light energy released'
-    ],
-    reactions: [
-      {
-        id: 'combustion',
-        reactants: ['ch4', 'o2'],
-        products: ['co2', 'h2o'],
-        equation: 'CH₄ + 2O₂ → CO₂ + 2H₂O',
-        conditions: { temperature: 800 },
-        effects: [
-          {
-            type: 'heat-release',
-            intensity: 0.9,
-            duration: 4000
-          },
-          {
-            type: 'gas-evolution',
-            intensity: 0.8,
-            duration: 3000,
-            particle: 'bubble'
-          }
-        ]
-      }
-    ]
-  },
-
-  {
     id: 'decomposition-reaction',
     title: 'Decomposition Reaction',
     description: 'Observe the decomposition of hydrogen peroxide into water and oxygen.',
@@ -336,7 +252,6 @@ export const EXPERIMENTS: Experiment[] = [
       'Observe catalyst effects',
       'Learn about oxygen production'
     ],
-    chemicals: [], // Moved chemicals property to correct position
     materials: [
       { equipmentType: 'beaker', quantity: 1, required: true },
       { equipmentType: 'test-tube', quantity: 1, required: true },
@@ -419,7 +334,6 @@ export const EXPERIMENTS: Experiment[] = [
       'Observe color changes with pH',
       'Learn about endpoint detection in titrations'
     ],
-    chemicals: [], // Moved chemicals property to correct position
     materials: [
       { equipmentType: 'beaker', quantity: 2, required: true },
       { equipmentType: 'graduated-cylinder', quantity: 2, required: true }
@@ -496,85 +410,84 @@ export const EXPERIMENTS: Experiment[] = [
         ]
       }
     ]
+  },
+  
+  {
+    id: 'permanganate-reduction',
+    title: 'Permanganate Reduction Reaction',
+    description: 'Demonstrate the reduction of potassium permanganate with oxalic acid in acidic solution.',
+    difficulty: 'intermediate',
+    duration: 15,
+    category: 'redox',
+    objectives: [
+      'Understand redox reactions',
+      'Observe color changes during reduction',
+      'Learn about permanganate as an oxidizing agent'
+    ],
+    materials: [
+      { equipmentType: 'beaker', quantity: 1, required: true },
+      { equipmentType: 'graduated-cylinder', quantity: 3, required: true }
+    ],
+    steps: [
+      {
+        id: 'step1',
+        instruction: 'Add potassium permanganate solution to the beaker',
+        equipment: ['beaker'],
+        chemicals: ['kmno4'],
+        action: 'pour',
+        expectedObservation: 'Beaker fills with purple solution',
+        completed: false
+      },
+      {
+        id: 'step2',
+        instruction: 'Add dilute sulfuric acid to the beaker',
+        equipment: ['beaker'],
+        chemicals: ['h2so4'],
+        action: 'pour',
+        expectedObservation: 'No immediate color change (just sets acidic medium)',
+        completed: false
+      },
+      {
+        id: 'step3',
+        instruction: 'Add oxalic acid solution to the beaker',
+        equipment: ['beaker'],
+        chemicals: ['oxalic-acid'],
+        action: 'pour',
+        expectedObservation: 'Solution should fade from purple → pale pink slowly (8–10 sec)',
+        completed: false
+      }
+    ],
+    safetyNotes: [
+      'Wear safety goggles and gloves',
+      'Handle potassium permanganate carefully - it stains skin and clothing',
+      'Sulfuric acid is corrosive - avoid skin contact',
+      'Work in well-ventilated area',
+      'Oxalic acid is toxic - avoid ingestion'
+    ],
+    expectedResults: [
+      'Color change from purple to pale pink',
+      'Smooth color transition over 8-10 seconds',
+      'Final solution is almost colorless'
+    ],
+    reactions: [
+      {
+        id: 'permanganate-reduction',
+        reactants: ['kmno4', 'h2so4', 'oxalic-acid'],
+        products: ['mn2+', 'co2', 'h2o'],
+        equation: '2KMnO₄ + 5H₂C₂O₄ + 3H₂SO₄ → 2MnSO₄ + 10CO₂ + 8H₂O',
+        conditions: { temperature: 25 },
+        effects: [
+          {
+            type: 'color-change',
+            intensity: 1.0,
+            duration: 9000, // 9 seconds for full transition to match requirement
+            color: '#FFF5FA' // Final color: almost colorless/pale pink
+          }
+        ]
+      }
+    ]
   }
 ]
 
-// Add the new reduction reaction experiment
-export const REDUCTION_EXPERIMENT: Experiment = {
-  id: 'reduction-reaction',
-  title: 'Reduction Reaction',
-  description: 'Demonstrate the reduction of potassium permanganate (KMnO₄) in acidic medium using oxalic acid as a reducing agent.',
-  difficulty: 'intermediate',
-  duration: 15,
-  category: 'redox',
-  objectives: [
-    'Understand redox reactions',
-    'Observe the reduction of KMnO₄ to Mn²⁺',
-    'Learn about permanganate as an oxidizing agent'
-  ],
-  chemicals: [], // Moved chemicals property to correct position
-  materials: [
-    { equipmentType: 'test-tube', quantity: 1, required: true },
-    { equipmentType: 'beaker', quantity: 2, required: true }
-  ],
-  steps: [
-    {
-      id: 'step1',
-      instruction: 'Add potassium permanganate solution to a test tube',
-      equipment: ['test-tube'],
-      chemicals: ['kmno4'],
-      action: 'pour',
-      expectedObservation: 'Deep purple solution in test tube',
-      completed: false
-    },
-    {
-      id: 'step2',
-      instruction: 'Add dilute sulfuric acid to the solution',
-      equipment: ['test-tube'],
-      chemicals: ['h2so4'],
-      action: 'pour',
-      expectedObservation: 'Acidic conditions established',
-      completed: false
-    },
-    {
-      id: 'step3',
-      instruction: 'Add oxalic acid solution to the mixture',
-      equipment: ['test-tube'],
-      chemicals: ['oxalic-acid'],
-      action: 'pour',
-      expectedObservation: 'Purple color fades to colorless',
-      completed: false
-    }
-  ],
-  safetyNotes: [
-    'Handle potassium permanganate carefully - it stains skin and clothing',
-    'Sulfuric acid is corrosive - avoid skin contact',
-    'Wear safety goggles and gloves',
-    'Work in a well-ventilated area'
-  ],
-  expectedResults: [
-    'Color change from deep purple to pale pink/colorless',
-    'Formation of Mn²⁺ ions in solution',
-    'Evolution of carbon dioxide gas'
-  ],
-  reactions: [
-    {
-      id: 'kmno4-reduction',
-      reactants: ['kmno4', 'h2so4', 'oxalic-acid'],
-      products: ['mnso4', 'co2', 'h2o'],
-      equation: '2KMnO₄ + 5H₂C₂O₄ + 3H₂SO₄ → 2MnSO₄ + 10CO₂ + 8H₂O',
-      conditions: { temperature: 25 },
-      effects: [
-        {
-          type: 'color-change',
-          intensity: 0.9,
-          duration: 9000,
-          color: '#FFF5FA' // Almost colorless final state
-        }
-      ]
-    }
-  ]
-};
-
-// Export all experiments including the new one
-export const ALL_EXPERIMENTS = [...EXPERIMENTS, REDUCTION_EXPERIMENT];
+// Export all experiments
+export const ALL_EXPERIMENTS = [...EXPERIMENTS];

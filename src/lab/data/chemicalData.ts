@@ -25,12 +25,12 @@ export const CHEMICALS: Record<string, Chemical> = {
     id: 'h2so4',
     name: 'Sulfuric Acid',
     formula: 'H₂SO₄',
-    color: '#FFF8DC',
+    color: 'transparent',
     concentration: 0.1,
     ph: 0.3,
     properties: {
       state: 'liquid',
-      color: '#FFF8DC',
+      color: 'transparent',
       density: 1.84,
       boilingPoint: 337,
       meltingPoint: 10,
@@ -82,14 +82,13 @@ export const CHEMICALS: Record<string, Chemical> = {
     name: 'Sodium Chloride',
     formula: 'NaCl',
     color: '#F5F5F580', // Slightly transparent white for colorless solution
-    concentration: 0.03, // 3% aqueous solution
     properties: {
-      state: 'liquid', // Change from 'solid' to 'liquid' for aqueous solution
-      color: '#F5F5F580', // Slightly transparent white for colorless solution
-      density: 1.02, // Adjust density for aqueous solution
-      boilingPoint: 108, // Adjust boiling point for aqueous solution
-      meltingPoint: -2, // Adjust melting point for aqueous solution
-      solubility: 100, // Increase solubility for aqueous solution
+      state: 'solid',
+      color: '#FFFFFF',
+      density: 2.16,
+      boilingPoint: 1465,
+      meltingPoint: 801,
+      solubility: 36,
       reactivity: []
     }
   },
@@ -198,6 +197,25 @@ export const CHEMICALS: Record<string, Chemical> = {
       reactivity: ['acid']
     }
   },
+
+  // Permanganate compounds
+  KMNO4: {
+    id: 'kmno4',
+    name: 'Potassium Permanganate',
+    formula: 'KMnO₄',
+    color: '#9D27B0', // Purple as specified
+    concentration: 0.1,
+    properties: {
+      state: 'liquid',
+      color: '#9D27B0', // Purple as specified
+      density: 1.05,
+      boilingPoint: 100,
+      meltingPoint: 240,
+      solubility: 6.4,
+      reactivity: ['reducing-agent']
+    }
+  },
+
 
   CU: {
     id: 'cu',
@@ -341,6 +359,41 @@ export const CHEMICALS: Record<string, Chemical> = {
       boilingPoint: 1547,
       meltingPoint: 455,
       solubility: 0.002,
+      reactivity: []
+    }
+  },
+
+  // Oxalic Acid for KMnO4 reduction reaction
+  'OXALIC-ACID': {
+    id: 'oxalic-acid',
+    name: 'Oxalic Acid',
+    formula: 'H₂C₂O₄',
+    color: '#FFFFFF',
+    concentration: 0.1,
+    properties: {
+      state: 'liquid',
+      color: '#FFFFFF',
+      density: 1.90,
+      boilingPoint: 100,
+      meltingPoint: 189,
+      solubility: 100,
+      reactivity: ['oxidant']
+    }
+  },
+  
+  // Manganese Ion (Mn²⁺) - product of KMnO4 reduction
+  'MN2+': {
+    id: 'mn2+',
+    name: 'Manganese Ion',
+    formula: 'Mn²⁺',
+    color: '#FFF5FA', // Almost colorless/light pink
+    properties: {
+      state: 'liquid',
+      color: '#FFF5FA', // Almost colorless/light pink
+      density: 1.0,
+      boilingPoint: 100,
+      meltingPoint: 0,
+      solubility: 100,
       reactivity: []
     }
   }

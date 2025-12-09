@@ -447,17 +447,17 @@ const Auth = () => {
             <div className="animate-fade-in delay-200">
               <h4 className="text-foreground font-semibold mb-4">Feedback</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li className="animate-fade-in delay-300"><a href="#" className="hover:text-primary transition-colors flex items-center gap-2">📧 Email</a></li>
-                <li className="animate-fade-in delay-400"><a href="#" className="hover:text-primary transition-colors flex items-center gap-2">💬 Chat</a></li>
-                <li className="animate-fade-in delay-500"><a href="#" className="hover:text-primary transition-colors flex items-center gap-2">❓ Help</a></li>
+                <li className="animate-fade-in delay-300"><a href="#" className="hover:text-primary transition-colors">Email</a></li>
+                <li className="animate-fade-in delay-400"><a href="#" className="hover:text-primary transition-colors">Chat</a></li>
+                <li className="animate-fade-in delay-500"><a href="#" className="hover:text-primary transition-colors">Help</a></li>
               </ul>
             </div>
             <div className="animate-fade-in delay-400">
               <h4 className="text-foreground font-semibold mb-4">Connect</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li className="animate-fade-in delay-500"><a href="#" className="hover:text-primary transition-colors flex items-center gap-2">👍 Facebook</a></li>
-                <li className="animate-fade-in delay-600"><a href="#" className="hover:text-primary transition-colors flex items-center gap-2">📸 Instagram</a></li>
-                <li className="animate-fade-in delay-700"><a href="#" className="hover:text-primary transition-colors flex items-center gap-2">🌐 Website</a></li>
+                <li className="animate-fade-in delay-500"><a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Facebook</a></li>
+                <li className="animate-fade-in delay-600"><a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a></li>
+                <li className="animate-fade-in delay-700"><a href="" onClick={() => window.location.reload()} className="hover:text-primary transition-colors">Website</a></li>
               </ul>
             </div>
             <div className="animate-fade-in delay-600">

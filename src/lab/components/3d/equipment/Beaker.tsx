@@ -58,6 +58,67 @@ export default function Beaker({
     return hasZinc && hasCuSO4
   }, [solids, liquids])
 
+  // State to track the sequence of chemical additions
+  const [chemicalAdditionSequence, setChemicalAdditionSequence] = useState<string[]>([]);
+
+  // Effect to track the sequence of chemical additions
+  useEffect(() => {
+    // Get current chemical IDs
+    const currentChemicalIds = liquids.map(liquid => liquid.id);
+    
+    console.log('🧪 Sequence tracking - Current liquids:', currentChemicalIds);
+    console.log('🧪 Sequence tracking - Previous sequence:', chemicalAdditionSequence);
+    
+    // Check what's new compared to the sequence
+    const newChemicals = currentChemicalIds.filter(id => !chemicalAdditionSequence.includes(id));
+    
+    console.log('🧪 Sequence tracking - New chemicals:', newChemicals);
+    
+    // If we have new chemicals, add them to the sequence
+    if (newChemicals.length > 0) {
+      console.log('🧪 Adding chemicals to sequence:', newChemicals);
+      setChemicalAdditionSequence(prev => [...prev, ...newChemicals]);
+    }
+    
+    console.log('🧪 Current chemical sequence:', chemicalAdditionSequence);
+    console.log('🧪 Current liquids:', currentChemicalIds);
+  }, [liquids, chemicalAdditionSequence]);
+
+  // Check if permanganate reduction reaction is in progress
+  // Only trigger when oxalic acid is added AFTER H2SO4
+  const isPermanganateReduction = useMemo(() => {
+    const hasKMnO4 = liquids.some(liquid => liquid.id === 'kmno4');
+    const hasH2SO4 = liquids.some(liquid => liquid.id === 'h2so4');
+    const hasOxalicAcid = liquids.some(liquid => liquid.id === 'oxalic-acid');
+    
+    // Check the sequence - H2SO4 must come before oxalic acid
+    const h2so4Index = chemicalAdditionSequence.indexOf('h2so4');
+    const oxalicAcidIndex = chemicalAdditionSequence.indexOf('oxalic-acid');
+    const isCorrectSequence = h2so4Index !== -1 && oxalicAcidIndex !== -1 && h2so4Index < oxalicAcidIndex;
+    
+    console.log('🧪 Permanganate check:', { 
+      hasKMnO4, 
+      hasH2SO4, 
+      hasOxalicAcid, 
+      h2so4Index, 
+      oxalicAcidIndex, 
+      isCorrectSequence,
+      chemicalAdditionSequence
+    });
+    
+    // Only trigger reaction when:
+    // 1. We have KMnO4, H2SO4, and oxalic acid
+    // 2. H2SO4 was added before oxalic acid
+    return hasKMnO4 && hasH2SO4 && hasOxalicAcid && isCorrectSequence;
+  }, [liquids, chemicalAdditionSequence]);
+
+  // Reset chemical sequence tracking when beaker is emptied
+  useEffect(() => {
+    if (liquids.length === 0) {
+      setChemicalAdditionSequence([]);
+    }
+  }, [liquids]);
+
   // Track neutralization progress for phenolphthalein
   const [neutralizationProgress, setNeutralizationProgress] = useState(0)
 
@@ -103,13 +164,9 @@ export default function Beaker({
     const hasAgNO3 = liquids.some(liquid => liquid.id === 'agno3')
     const hasNaCl = liquids.some(liquid => liquid.id === 'nacl')
     const hasAgCl = liquids.some(liquid => liquid.id === 'agcl')
-    // Also check for the full names used in experimentMaterials
-    const hasSilverNitrate = liquids.some(liquid => liquid.id === 'silver-nitrate')
-    const hasSodiumChloride = liquids.some(liquid => liquid.id === 'sodium-chloride')
+    const result = hasAgNO3 && hasNaCl && !hasAgCl
     
-    const result = (hasAgNO3 || hasSilverNitrate) && (hasNaCl || hasSodiumChloride) && !hasAgCl
-    
-    console.log('🧪 Precipitation check:', { hasAgNO3, hasNaCl, hasAgCl, hasSilverNitrate, hasSodiumChloride, result })
+    console.log('🧪 Precipitation check:', { hasAgNO3, hasNaCl, hasAgCl, result })
     
     return result
   }, [liquids])
@@ -127,7 +184,7 @@ export default function Beaker({
       return '#E6F3FF'
     }
 
-    console.log('🧪 Beaker has liquid contents:', liquids.map(c => ({ id: c.id, name: c.name })))
+    console.log('🧪 Beaker has liquid contents:', liquids.map(c => ({ id: c.id, name: c.name, color: c.color })))
 
     const hasHCl = liquids.some(c => c.id === 'hcl')
     const hasNaOH = liquids.some(c => c.id === 'naoh')
@@ -139,14 +196,46 @@ export default function Beaker({
     const hasNaCl = liquids.some(c => c.id === 'nacl')
     const hasAgCl = liquids.some(c => c.id === 'agcl')
     const hasH2O2 = liquids.some(c => c.id === 'h2o2')
-    // Also check for the full names used in experimentMaterials
-    const hasSilverNitrate = liquids.some(c => c.id === 'silver-nitrate')
-    const hasSodiumChloride = liquids.some(c => c.id === 'sodium-chloride')
+    const hasKMnO4 = liquids.some(c => c.id === 'kmno4')
+    const hasH2SO4 = liquids.some(c => c.id === 'h2so4')
+    const hasOxalicAcid = liquids.some(c => c.id === 'oxalic-acid')
 
-    console.log('📊 Liquid contents check:', { hasHCl, hasNaOH, hasPhenolphthalein, hasAgNO3, hasNaCl, hasAgCl, hasH2O2, hasSilverNitrate, hasSodiumChloride })
+    console.log('📊 Liquid contents check:', { hasHCl, hasNaOH, hasPhenolphthalein, hasAgNO3, hasNaCl, hasAgCl, hasH2O2, hasKMnO4, hasH2SO4, hasOxalicAcid })
+
+    // Special case for permanganate reduction reaction - ACTIVE
+    if (isPermanganateReduction) {
+      console.log('🧪 PERMANGANATE REDUCTION ACTIVE');
+      // Smooth purple to colorless transition over 8-10 seconds
+      const startColor = { r: 157, g: 39, b: 176 }; // #9D27B0 (purple)
+      const endColor = { r: 255, g: 255, b: 255 };   // #FFFFFF (colorless)
+      
+      // Linear interpolation for smooth color transition
+      const r = Math.round(startColor.r + (endColor.r - startColor.r) * reactionProgress);
+      const g = Math.round(startColor.g + (endColor.g - startColor.g) * reactionProgress);
+      const b = Math.round(startColor.b + (endColor.b - startColor.b) * reactionProgress);
+      
+      const newColor = `rgb(${r}, ${g}, ${b})`;
+      
+      console.log(`🔄 Permanganate reduction progress: ${reactionProgress.toFixed(2)}`)
+      return newColor;
+    }
+
+    // Special case for permanganate reaction setup - KMnO4 + H2SO4 only
+    // This should maintain the deep purple color of KMnO4
+    if (hasKMnO4 && hasH2SO4 && !hasOxalicAcid) {
+      console.log('🟣 PURPLE - KMnO4 + H2SO4 ONLY (maintaining deep purple)', { 
+        hasKMnO4, 
+        hasH2SO4, 
+        hasOxalicAcid, 
+        liquidsLength: liquids.length,
+        liquidIds: liquids.map(l => l.id)
+      });
+      // Return the pure KMnO4 color without mixing
+      return '#9D27B0'; // Purple as specified
+    }
 
     // Special case for precipitation reaction (AgNO3 + NaCl -> AgCl + NaNO3)
-    const isPrecipitationInProgress = (hasAgNO3 || hasSilverNitrate) && (hasNaCl || hasSodiumChloride) && !hasAgCl;
+    const isPrecipitationInProgress = hasAgNO3 && hasNaCl && !hasAgCl;
     if (isPrecipitationInProgress) {
       console.log('🔄 PRECIPITATION REACTION IN PROGRESS - Colorless solution with white precipitate')
       return '#F0F0F0' // Slightly off-white for cloudy appearance during precipitation
@@ -223,16 +312,31 @@ export default function Beaker({
       return `#${interpolatedColor.getHexString()}`
     }
 
+    // Special handling: if KMnO4 is present with H2SO4 but NO oxalic acid, return pure KMnO4 color
+    if (hasKMnO4 && hasH2SO4 && !hasOxalicAcid) {
+      console.log('🟣 FORCE PURPLE - KMnO4 + H2SO4 detected in mixing section');
+      return '#9D27B0'; // Force purple
+    }
+
+    // Special handling: if only KMnO4, return pure purple
+    if (hasKMnO4 && liquids.length === 1) {
+      console.log('🟣 PURE KMNO4 PURPLE');
+      return '#9D27B0';
+    }
+
     if (liquids.length === 1) {
+      console.log('🧪 SINGLE LIQUID:', liquids[0].color);
       return liquids[0].color || '#E6F3FF'
     }
 
+    console.log('🧪 MIXING MULTIPLE LIQUIDS - This should not happen for KMnO4 + H2SO4 only');
     let r = 0, g = 0, b = 0
     liquids.forEach(chemical => {
       const color = new THREE.Color(chemical.color || '#FFFFFF')
       r += color.r
       g += color.g
       b += color.b
+      console.log('🧪 Mixing chemical:', chemical.id, chemical.color);
     })
     
     const avgColor = new THREE.Color(
@@ -241,23 +345,29 @@ export default function Beaker({
       b / liquids.length
     )
     
+    console.log('🧪 Averaged color:', `#${avgColor.getHexString()}`);
     return `#${avgColor.getHexString()}`
-  }, [liquids, isDisplacementReaction, reactionProgress, precipitationProgress, neutralizationProgress])
+  }, [liquids, isDisplacementReaction, isPermanganateReduction, reactionProgress, precipitationProgress, neutralizationProgress, chemicalAdditionSequence])
 
-  // Simulate reaction progress over time when displacement reaction is active
+  // Simulate reaction progress over time when displacement or permanganate reduction reaction is active
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null
     
-    if (isDisplacementReaction && reactionProgress < 1) {
+    if ((isDisplacementReaction || isPermanganateReduction) && reactionProgress < 1) {
+      // For permanganate reduction, use smooth transition over 8-10 seconds
+      const increment = isPermanganateReduction ? 0.01 : 0.008;
+      // For permanganate reduction: 90 steps over 9 seconds = 100ms per step
+      const interval = isPermanganateReduction ? 100 : 200;
+      
       intervalId = setInterval(() => {
-        setReactionProgress(prev => Math.min(prev + 0.008, 1))
-      }, 200)
+        setReactionProgress(prev => Math.min(prev + increment, 1))
+      }, interval)
     }
     
     return () => {
       if (intervalId) clearInterval(intervalId)
     }
-  }, [isDisplacementReaction, reactionProgress])
+  }, [isDisplacementReaction, isPermanganateReduction, reactionProgress])
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -287,14 +397,14 @@ export default function Beaker({
       onPointerOver={onPointerOver}
       onPointerOut={onPointerOut}
     >
-      {/* Main Beaker Body - Straight cylindrical shape */}
+      {/* Main Beaker Body - Taller and slimmer cylindrical shape */}
       <mesh
         ref={beakerRef}
         castShadow
         receiveShadow
         position={[0, 0, 0]}
       >
-        <cylinderGeometry args={[0.7, 0.7, 2.0, 64]} />
+        <cylinderGeometry args={[0.7, 0.8, 2.0, 32]} />
         <meshPhysicalMaterial
           color="#e2e8f0" // Frosted glass color
           transparent
@@ -317,7 +427,7 @@ export default function Beaker({
         castShadow
         receiveShadow
       >
-        <cylinderGeometry args={[0.75, 0.75, 0.1, 64]} />
+        <cylinderGeometry args={[0.75, 0.75, 0.1, 32]} />
         <meshPhysicalMaterial
           color="#e2e8f0"
           transparent
@@ -330,27 +440,19 @@ export default function Beaker({
         />
       </mesh>
 
-      {/* Measurement Markings - Accurate volumetric markings on the side */}
-      {Array.from({ length: 20 }).map((_, index) => (
-        <group key={`marking-group-${index}`} position={[0.7, -0.9 + index * 0.1, 0]}>
-          <mesh
-            position={[0, 0, 0]}
-            rotation={[0, 0, Math.PI / 2]}
-          >
-            <cylinderGeometry args={[0.005, 0.005, index % 5 === 0 ? 0.15 : 0.08]} />
-            <meshStandardMaterial 
-              color={index % 5 === 0 ? "#1a202c" : "#4a5568"} 
-              roughness={0.4} 
-            />
-          </mesh>
-          {/* Number labels for major markings */}
-          {index % 5 === 0 && (
-            <mesh position={[0.15, -0.02, 0]} rotation={[0, 0, 0]}>
-              <boxGeometry args={[0.15, 0.08, 0.01]} />
-              <meshBasicMaterial transparent opacity={0} />
-            </mesh>
-          )}
-        </group>
+      {/* Measurement Markings - Properly aligned on the side */}
+      {Array.from({ length: 12 }).map((_, index) => (
+        <mesh
+          key={`marking-${index}`}
+          position={[0.7, -0.8 + index * 0.15, 0]}
+          rotation={[0, 0, Math.PI / 2]}
+        >
+          <cylinderGeometry args={[0.005, 0.005, index % 4 === 0 ? 0.1 : 0.06]} />
+          <meshStandardMaterial 
+            color={index % 4 === 0 ? "#2d3748" : "#4a5568"} 
+            roughness={0.4} 
+          />
+        </mesh>
       ))}
 
       {/* Liquid Content */}
@@ -364,18 +466,14 @@ export default function Beaker({
           <cylinderGeometry args={[0.65, 0.65, liquidHeight, 32]} />
           <meshPhysicalMaterial
             color={liquidColor}
-            transparent
-            opacity={isPrecipitationReaction ? 0.8 : 0.85} // Slightly less opaque during precipitation
-            roughness={isPrecipitationReaction ? 0.35 : 0.1} // Higher roughness for cloudy appearance during precipitation
-            metalness={0.01}
-            clearcoat={0.4}
-            clearcoatRoughness={isPrecipitationReaction ? 0.45 : 0.15} // Higher roughness during precipitation
-            transmission={isPrecipitationReaction ? 0.4 : 0.6} // Lower transmission for cloudy appearance
-            ior={1.33}
-            depthWrite={true}
-            side={THREE.FrontSide}
-            envMapIntensity={0.15}
+            transparent={true}
+            opacity={0.7}
+            roughness={0.1}
+            metalness={0.0}
+            transmission={0.3}
+            thickness={0.5}
           />
+
         </mesh>
       )}
 
@@ -384,104 +482,45 @@ export default function Beaker({
         <group position={[0, -1.0, 0]}>
           {/* Dense white layer at the bottom representing settled AgCl precipitate */}
           <mesh position={[0, 0.05, 0]}>
-            <cylinderGeometry args={[0.65, 0.65, 0.15, 64]} />
+            <cylinderGeometry args={[0.65, 0.65, 0.15, 32]} />
             <meshPhysicalMaterial
-              color="#ffffff" // Pure white for opaque AgCl precipitate
-              roughness={0.9} // Higher roughness for cloudy appearance
-              metalness={0.0} // No metalness for opaque appearance
-              transparent={false} // Opaque for realistic precipitate
-              opacity={1.0} // Fully opaque
-              transmission={0.0} // No transmission for opaque appearance
-              clearcoat={0.0} // No clearcoat for matte appearance
-              clearcoatRoughness={1.0}
-              envMapIntensity={0.0}
-              ior={1.0}
-              specularIntensity={0.0} // No specular for matte effect
+              color="#F8F8F8" // Off-white for AgCl precipitate
+              roughness={0.6} // Higher roughness for cloudy appearance
+              metalness={0.0} // No metalness for non-metallic appearance
+              transparent={true} // Semi-transparent for realistic precipitate
+              opacity={0.95} // More opaque for dense precipitate appearance
+              transmission={0.1} // Very low transmission for cloudy appearance
+              clearcoat={0.1} // Subtle clearcoat
+              clearcoatRoughness={0.4}
+              envMapIntensity={0.05}
+              ior={1.33}
             />
           </mesh>
           
-          {/* Enhanced floating cloudy particles during precipitation formation */}
-          {isPrecipitationReaction && (
-            <group>
-              {/* Primary floating particles - larger, more visible particles for soft cloud effect */}
-              {Array.from({ length: 100 }).map((_, index) => (
-                <mesh
-                  key={`streak-${index}`}
-                  position={[
-                    (Math.random() - 0.5) * 0.9,
-                    0.1 + Math.random() * (liquidHeight * 0.95),
-                    (Math.random() - 0.5) * 0.9
-                  ]}
-                >
-                  <sphereGeometry args={[0.03 + Math.random() * 0.07]} />
-                  <meshPhysicalMaterial
-                    color="#ffffff" // Pure white for AgCl precipitate
-                    roughness={0.85} // High roughness for cloudy appearance
-                    metalness={0.0} // No metalness for opaque appearance
-                    transparent={true}
-                    opacity={0.85} // Semi-transparent for floating effect
-                    transmission={0.05}
-                    clearcoat={0.0}
-                    clearcoatRoughness={1.0}
-                    envMapIntensity={0.0}
-                    specularIntensity={0.0} // No specular for matte effect
-                  />
-                </mesh>
-              ))}
-              
-              {/* Secondary smaller shimmering particles - for dynamic sparkle effect */}
-              {Array.from({ length: 150 }).map((_, index) => (
-                <mesh
-                  key={`particle-${index}`}
-                  position={[
-                    (Math.random() - 0.5) * 1.0,
-                    0.1 + Math.random() * (liquidHeight * 0.98),
-                    (Math.random() - 0.5) * 1.0
-                  ]}
-                >
-                  <sphereGeometry args={[0.01 + Math.random() * 0.03]} />
-                  <meshPhysicalMaterial
-                    color="#ffffff" // Pure white for maximum shimmer
-                    roughness={0.8} // High roughness for cloudy appearance
-                    metalness={0.0} // No metalness for opaque appearance
-                    transparent={true}
-                    opacity={0.75} // More transparent for floating effect
-                    transmission={0.1}
-                    clearcoat={0.0}
-                    clearcoatRoughness={1.0}
-                    envMapIntensity={0.0}
-                    specularIntensity={0.0} // No specular for matte effect
-                  />
-                </mesh>
-              ))}
-              
-              {/* Tertiary micro particles - for subtle cloud-like texture */}
-              {Array.from({ length: 200 }).map((_, index) => (
-                <mesh
-                  key={`micro-${index}`}
-                  position={[
-                    (Math.random() - 0.5) * 1.1,
-                    0.1 + Math.random() * (liquidHeight * 0.99),
-                    (Math.random() - 0.5) * 1.1
-                  ]}
-                >
-                  <sphereGeometry args={[0.003 + Math.random() * 0.012]} />
-                  <meshPhysicalMaterial
-                    color="#ffffff" // Pure white for subtle texture
-                    roughness={0.85} // High roughness
-                    metalness={0.0} // No metalness
-                    transparent={true}
-                    opacity={0.6} // More transparent
-                    transmission={0.15}
-                    clearcoat={0.0}
-                    clearcoatRoughness={1.0}
-                    envMapIntensity={0.0}
-                    specularIntensity={0.0} // No specular
-                  />
-                </mesh>
-              ))}
-            </group>
-          )}
+          {/* Floating cloudy streaks during precipitation formation */}
+          {isPrecipitationReaction && Array.from({ length: 15 }).map((_, index) => (
+            <mesh
+              key={`streak-${index}`}
+              position={[
+                (Math.random() - 0.5) * 0.5,
+                0.1 + Math.random() * (liquidHeight * 0.8),
+                (Math.random() - 0.5) * 0.5
+              ]}
+            >
+              <sphereGeometry args={[0.02 + Math.random() * 0.05]} />
+              <meshPhysicalMaterial
+                color="#F8F8F8" // Off-white for AgCl precipitate
+                roughness={0.7} // Higher roughness for cloudy appearance
+                metalness={0.0} // No metalness
+                transparent={true}
+                opacity={0.8} // More opaque for visible streaks
+                transmission={0.2}
+                clearcoat={0.05}
+                clearcoatRoughness={0.5}
+                envMapIntensity={0.02}
+              />
+            </mesh>
+          ))}
         </group>
       )}
 

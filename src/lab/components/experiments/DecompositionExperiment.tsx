@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 const DecompositionExperiment = () => {
   const mountRef = useRef<HTMLDivElement>(null);
+  const clockRef = useRef<THREE.Clock | null>(null); // Ref to store clock instance
   const [isBurnerLit, setIsBurnerLit] = useState(false);
   const [vesselHeight, setVesselHeight] = useState(5);
   const [temperature, setTemperature] = useState(25);
@@ -12,13 +13,33 @@ const DecompositionExperiment = () => {
   const [oxygenProduction, setOxygenProduction] = useState(0);
   const [decompositionStarted, setDecompositionStarted] = useState(false);
   const [hasCatalyst, setHasCatalyst] = useState(false);
+  const [catalystAddedTime, setCatalystAddedTime] = useState<number | null>(null);
+  const [transitionComplete, setTransitionComplete] = useState(false);
+  
+  // Create a ref to track catalyst state in the Three.js context
+  const catalystStateRef = useRef({
+    isActive: false,
+    addedTime: null as number | null,
+    transitionCompleted: false
+  });
+  
+  // Add state variables for catalyst transition
+  let localCatalystAddedTime = -1;
+  let localTransitionComplete = false;
 
   useEffect(() => {
+    // Update the ref when state changes
+    catalystStateRef.current.isActive = hasCatalyst;
+    
+    // Initialize catalyst state ref with current values
+    catalystStateRef.current.addedTime = localCatalystAddedTime;
+    catalystStateRef.current.transitionCompleted = localTransitionComplete;
+    
     if (!mountRef.current) return;
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a2e);
+    scene.background = new THREE.Color(0x4a5568); // Dark grey-blue
     
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -369,24 +390,31 @@ const DecompositionExperiment = () => {
     // Reactant inside test tube (H2O2) - starts from bottom
     const liquidGroup = new THREE.Group();
     
-    const reactantGeometry = new THREE.CylinderGeometry(0.35, 0.35, 1.5, 32);
-    const reactantMaterial = new THREE.MeshPhongMaterial({
-      color: 0xcceeee,
-      transparent: true,
-      opacity: 0.7,
-      shininess: 100
+    // Adjusted to fill about 1/3 of the test tube height (2.5 units high)
+    const reactantGeometry = new THREE.CylinderGeometry(0.35, 0.35, 0.83, 32);
+    const reactantMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,      // WHITE (change from 0xff69b4)
+      transparent: false,
+      opacity: 1.0,
+      roughness: 0.3,
+      metalness: 0.1,
+      emissive: 0xdddddd,   // LIGHT GREY emissive (change from 0xff1493)
+      emissiveIntensity: 0.5
     });
     const reactant = new THREE.Mesh(reactantGeometry, reactantMaterial);
-    reactant.position.y = 0.75;
+    reactant.position.y = 0.415; // Half of 0.83
     liquidGroup.add(reactant);
 
     // Liquid bottom (to fill the rounded bottom completely)
     const liquidBottomGeometry = new THREE.SphereGeometry(0.35, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const liquidBottomMaterial = new THREE.MeshPhongMaterial({
-      color: 0xcceeee,
-      transparent: true,
-      opacity: 0.7,
-      shininess: 100
+    const liquidBottomMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,      // WHITE (change from 0xff69b4)
+      transparent: false,
+      opacity: 1.0,
+      roughness: 0.3,
+      metalness: 0.1,
+      emissive: 0xdddddd,   // LIGHT GREY emissive (change from 0xff1493)
+      emissiveIntensity: 0.5
     });
     const liquidBottom = new THREE.Mesh(liquidBottomGeometry, liquidBottomMaterial);
     liquidBottom.position.y = 0;
@@ -395,15 +423,18 @@ const DecompositionExperiment = () => {
 
     // Liquid surface
     const surfaceGeometry = new THREE.CircleGeometry(0.35, 32);
-    const surfaceMaterial = new THREE.MeshPhongMaterial({
-      color: 0xddffff,
-      transparent: true,
-      opacity: 0.5,
-      shininess: 100,
+    const surfaceMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,      // WHITE (change from 0xff69b4)
+      transparent: false,
+      opacity: 1.0,
+      roughness: 0.2,
+      metalness: 0.2,
+      emissive: 0xcccccc,   // LIGHT GREY emissive (change from 0xff1493)
+      emissiveIntensity: 0.4,
       side: THREE.DoubleSide
     });
     const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
-    surface.position.y = 1.5;
+    surface.position.y = 0.83; // Top of liquid
     surface.rotation.x = -Math.PI / 2;
     liquidGroup.add(surface);
 
@@ -411,57 +442,66 @@ const DecompositionExperiment = () => {
     const catalystGroup = new THREE.Group();
     
     // Base layer of catalyst powder
-    const catalystBaseGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 32);
+    const catalystBaseGeometry = new THREE.CylinderGeometry(0.32, 0.32, 0.08, 32); // CHANGE from (0.3, 0.3, 0.1, 32)
     const catalystBaseMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0a0a0a,
+      color: 0x000000,      // CHANGE to pure black from 0x0a0a0a
       roughness: 0.95,
-      metalness: 0.05
+      metalness: 0.05,
+      side: THREE.DoubleSide
     });
     const catalystBase = new THREE.Mesh(catalystBaseGeometry, catalystBaseMaterial);
-    catalystBase.position.y = 0.05;
+    catalystBase.position.y = 0.87;  // CHANGE from 0.83 to 0.87 (higher up)
     catalystGroup.add(catalystBase);
     
     // Add small particle clumps for realistic powder appearance
-    const particleGeometry = new THREE.SphereGeometry(0.03, 8, 8);
+    const particleGeometry = new THREE.SphereGeometry(0.04, 8, 8); // CHANGE from 0.03 to 0.04 (bigger)
     const particleMaterial = new THREE.MeshStandardMaterial({
       color: 0x1a1a1a,
       roughness: 0.9,
-      metalness: 0.1
+      metalness: 0.1,
+      side: THREE.DoubleSide
     });
-    
-    for (let i = 0; i < 15; i++) {
+
+    for (let i = 0; i < 30; i++) {  // CHANGE from 15 to 30 (more particles)
       const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-      const angle = (i / 15) * Math.PI * 2;
-      const radius = 0.1 + Math.random() * 0.15;
+      const angle = (i / 30) * Math.PI * 2;  // CHANGE from (i / 15) to (i / 30)
+      const radius = 0.05 + Math.random() * 0.2;  // CHANGE from (0.1 + Math.random() * 0.15)
       particle.position.set(
         Math.cos(angle) * radius,
-        0.08 + Math.random() * 0.05,
+        0.87 + Math.random() * 0.08,  // CHANGE from (0.86 + Math.random() * 0.05)
         Math.sin(angle) * radius
       );
       particle.scale.set(
-        0.8 + Math.random() * 0.4,
-        0.8 + Math.random() * 0.4,
-        0.8 + Math.random() * 0.4
+        1.0 + Math.random() * 0.6,  // CHANGE from (0.8 + Math.random() * 0.4) - bigger!
+        1.0 + Math.random() * 0.6,
+        1.0 + Math.random() * 0.6
       );
       catalystGroup.add(particle);
     }
     
-    catalystGroup.visible = false;
+    catalystGroup.visible = hasCatalyst; // Initialize visibility based on state
     liquidGroup.add(catalystGroup);
 
     scene.add(liquidGroup);
-
+    liquidGroup.renderOrder = 1; // ADD THIS LINE - ensures liquid renders after test tube
+    
+    // Force update the materials to ensure they're visible
+    reactantMaterial.needsUpdate = true;
+    liquidBottomMaterial.needsUpdate = true;
+    surfaceMaterial.needsUpdate = true;
+    
     // State variables
     let isFlameOn = false;
     let currentTemp = 25;
     let currentEnergy = 0;
     let currentOxygen = 0;
     let decompositionActive = false;
-    let catalystActive = false;
+    let catalystActive = false; // This needs to be updated when catalyst is added
 
     // Oxygen bubbles container
     const bubbles: THREE.Mesh[] = [];
-    const maxBubbles = 50;
+    const maxBubbles = 10;  // CHANGED from 20 to 10
+    clockRef.current = new THREE.Clock(); // Initialize clock and store in ref
 
     const createBubble = () => {
       const bubbleGeometry = new THREE.SphereGeometry(0.05 + Math.random() * 0.05, 8, 8);
@@ -472,12 +512,14 @@ const DecompositionExperiment = () => {
       });
       const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
       
-      // Spawn bubbles inside the test tube at the bottom
+      // Spawn bubbles inside the test tube at the bottom - SMALLER RADIUS
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 0.25;
+      const radius = Math.random() * 0.20;  // CHANGED from 0.25 to 0.20 - keeps bubbles inside
+      const currentVesselHeight = testTubeGroup.position.y;
+      
       bubble.position.set(
         Math.cos(angle) * radius,
-        vesselHeight + 0.15,
+        currentVesselHeight + 0.15,
         Math.sin(angle) * radius
       );
       
@@ -526,17 +568,128 @@ const DecompositionExperiment = () => {
     renderer.domElement.addEventListener('click', onMouseClick);
 
     // Animation loop
-    const clock = new THREE.Clock();
     let oldElapsedTime = 0;
     let bubbleSpawnTimer = 0;
 
     const animate = () => {
-      const elapsedTime = clock.getElapsedTime();
+      const elapsedTime = clockRef.current ? clockRef.current.getElapsedTime() : 0;
       const deltaTime = elapsedTime - oldElapsedTime;
       oldElapsedTime = elapsedTime;
 
-      // Update catalyst visibility
-      catalystGroup.visible = catalystActive;
+      // Update catalyst visibility based on hasCatalyst state
+      catalystGroup.visible = hasCatalyst;
+
+      // Set catalystActive when hasCatalyst changes
+      if (hasCatalyst && !catalystActive) {
+        catalystActive = true;
+        localCatalystAddedTime = elapsedTime;
+        localTransitionComplete = false;
+        
+        // DO NOT immediately change color - let the transition handle it
+      }
+      
+      // Color transition: TWO PHASES
+      if (catalystActive && localCatalystAddedTime > 0 && !localTransitionComplete) {
+        const timeSinceCatalyst = elapsedTime - localCatalystAddedTime;
+        
+        // PHASE 1: MnO2 dissolution (0-3 seconds) - White → Grey
+        const dissolutionDuration = 3.0;
+        
+        if (timeSinceCatalyst <= dissolutionDuration) {
+          const dissolutionProgress = timeSinceCatalyst / dissolutionDuration;
+          const eased = dissolutionProgress * dissolutionProgress * (3 - 2 * dissolutionProgress);
+          
+          // Dissolve from white (#ffffff) to grey (#808080)
+          const whiteColor = new THREE.Color(0xffffff);
+          const greyColor = new THREE.Color(0x808080);
+          const currentColor = whiteColor.clone().lerp(greyColor, eased);
+          
+          const startEmissive = 0.5;
+          const greyEmissive = 0.3;
+          const currentEmissive = startEmissive + (greyEmissive - startEmissive) * eased;
+          
+          // Update materials during dissolution
+          reactantMaterial.color.copy(currentColor);
+          reactantMaterial.transparent = false;
+          reactantMaterial.opacity = 1.0;
+          reactantMaterial.emissiveIntensity = currentEmissive;
+          reactantMaterial.needsUpdate = true;
+          
+          liquidBottomMaterial.color.copy(currentColor);
+          liquidBottomMaterial.transparent = false;
+          liquidBottomMaterial.opacity = 1.0;
+          liquidBottomMaterial.emissiveIntensity = currentEmissive;
+          liquidBottomMaterial.needsUpdate = true;
+          
+          surfaceMaterial.color.copy(currentColor);
+          surfaceMaterial.transparent = false;
+          surfaceMaterial.opacity = 1.0;
+          surfaceMaterial.emissiveIntensity = currentEmissive * 0.7;
+          surfaceMaterial.needsUpdate = true;
+          
+          // Fade the MnO2 particles as they "dissolve"
+          if (catalystGroup.visible) {
+            catalystBaseMaterial.transparent = true;
+            catalystBaseMaterial.opacity = 1.0 - eased;
+            catalystBaseMaterial.needsUpdate = true;
+            
+            particleMaterial.transparent = true;
+            particleMaterial.opacity = 1.0 - eased;
+            particleMaterial.needsUpdate = true;
+          }
+        } 
+        // PHASE 2: Decomposition (3-13 seconds) - Grey → Transparent #fffbf7
+        else {
+          const decompositionDuration: number = 10.0;
+          const decompositionTime: number = timeSinceCatalyst - dissolutionDuration;
+          const decompositionProgress: number = Math.min(decompositionTime / decompositionDuration, 1.0);
+          
+          const eased: number = decompositionProgress * decompositionProgress * (3 - 2 * decompositionProgress);
+          
+          // Fade from grey (#808080) to light grey (#fffbf7)
+          const greyColor = new THREE.Color(0x808080);
+          const endColor = new THREE.Color(0xfffbf7);  // Changed to #fffbf7
+          const currentColor = greyColor.clone().lerp(endColor, eased);
+          
+          // Fade opacity from solid to semi-transparent
+          const startOpacity: number = 1.0;
+          const endOpacity: number = 0.65;  // Slightly increased for better visibility
+          const currentOpacity: number = startOpacity + (endOpacity - startOpacity) * eased;
+          
+          // Fade emissive to 0
+          const startEmissive: number = 0.3;
+          const endEmissive: number = 0.0;
+          const currentEmissive: number = startEmissive + (endEmissive - startEmissive) * eased;
+          
+          // Update liquid materials with decomposition
+          reactantMaterial.color.copy(currentColor);
+          reactantMaterial.transparent = true;
+          reactantMaterial.opacity = currentOpacity;
+          reactantMaterial.emissiveIntensity = currentEmissive;
+          reactantMaterial.needsUpdate = true;
+          
+          liquidBottomMaterial.color.copy(currentColor);
+          liquidBottomMaterial.transparent = true;
+          liquidBottomMaterial.opacity = currentOpacity;
+          liquidBottomMaterial.emissiveIntensity = currentEmissive;
+          liquidBottomMaterial.needsUpdate = true;
+          
+          surfaceMaterial.color.copy(currentColor);
+          surfaceMaterial.transparent = true;
+          surfaceMaterial.opacity = currentOpacity * 0.8;
+          surfaceMaterial.emissiveIntensity = currentEmissive * 0.7;
+          surfaceMaterial.needsUpdate = true;
+          
+          // Hide catalyst particles completely after dissolution
+          if (catalystGroup.visible) {
+            catalystGroup.visible = false;
+          }
+          
+          if (decompositionProgress >= 1.0) {
+            localTransitionComplete = true;
+          }
+        }
+      }
 
       // Animate flame with realistic shader-based motion (EXACT FROM COMBUSTION EXPERIMENT)
       if (isFlameOn) {
@@ -574,6 +727,8 @@ const DecompositionExperiment = () => {
         if (currentTemp >= 60 && !decompositionActive) {
           decompositionActive = true;
           setDecompositionStarted(true);
+          localCatalystAddedTime = elapsedTime;  // Start the transition timer
+          localTransitionComplete = false;
         }
       } else {
         // Cool down
@@ -594,8 +749,8 @@ const DecompositionExperiment = () => {
       if (decompositionActive) {
         // Catalyst increases reaction speed and bubble production significantly
         const reactionMultiplier = catalystActive ? 4.0 : 1.0;
-        const bubbleSpawnRate = catalystActive ? 0.04 : 0.12;
-        const maxBubblesAllowed = catalystActive ? 50 : 25;
+        const bubbleSpawnRate = catalystActive ? 0.15 : 0.25;  // CHANGED: even slower
+        const maxBubblesAllowed = catalystActive ? 10 : 7;     // CHANGED: 5-10 bubbles max
         
         currentOxygen = Math.min(100, currentOxygen + deltaTime * 8 * reactionMultiplier);
         setOxygenProduction(Math.round(currentOxygen));
@@ -619,28 +774,12 @@ const DecompositionExperiment = () => {
         bubble.position.z += Math.cos(bubble.userData.wobble) * 0.01;
 
         // Remove bubbles that reach the top
-        if (bubble.position.y > vesselHeight + 2.5) {
+        const currentVesselHeight = testTubeGroup.position.y; // GET ACTUAL POSITION
+        if (bubble.position.y > currentVesselHeight + 2.5) {
           scene.remove(bubble);
           bubbles.splice(index, 1);
         }
       });
-
-      // Change reactant color based on temperature and decomposition
-      const heatRatio = Math.min(1, (currentTemp - 25) / 200);
-      const decompositionRatio = currentOxygen / 100;
-
-      // H2O2 (pale blue) -> H2O (nearly colorless)
-      const hue = 0.52; // Keep cyan/blue hue
-      const saturation = 0.3 - (decompositionRatio * 0.25);
-      const lightness = 0.85 + (decompositionRatio * 0.1);
-      reactantMaterial.color.setHSL(hue, saturation, lightness);
-      reactantMaterial.opacity = 0.5 - (decompositionRatio * 0.3);
-      
-      // Update liquid bottom to match
-      liquidBottomMaterial.color.setHSL(hue, saturation, lightness);
-      liquidBottomMaterial.opacity = 0.5 - (decompositionRatio * 0.3);
-      
-      surfaceMaterial.color.setHSL(hue, saturation * 0.5, lightness + 0.05);
 
       // Update test tube and liquid position
       testTubeGroup.position.y = vesselHeight;
@@ -671,7 +810,7 @@ const DecompositionExperiment = () => {
         mountRef.current.removeChild(renderer.domElement);
       }
     };
-  }, [vesselHeight, heatingRate, coolingRate]);
+  }, [vesselHeight, heatingRate, coolingRate, hasCatalyst]);
 
   return (
     <div className="flex h-screen bg-gray-900">
@@ -765,7 +904,18 @@ const DecompositionExperiment = () => {
           <div>
             <h3 className="font-semibold mb-2">Catalyst</h3>
             <button
-              onClick={() => setHasCatalyst(!hasCatalyst)}
+              onClick={() => {
+                setHasCatalyst(!hasCatalyst);
+                if (clockRef.current) {
+                  const currentTime = clockRef.current.getElapsedTime();
+                  setCatalystAddedTime(currentTime);
+                  catalystStateRef.current.addedTime = currentTime;
+                  localCatalystAddedTime = currentTime; // Set local variable
+                }
+                setTransitionComplete(false);
+                catalystStateRef.current.transitionCompleted = false;
+                localTransitionComplete = false; // Set local variable
+              }}
               className={`w-full py-2 px-4 rounded font-semibold ${
                 hasCatalyst ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 hover:bg-gray-700'
               }`}

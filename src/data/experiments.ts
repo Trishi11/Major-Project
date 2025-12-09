@@ -243,95 +243,6 @@ export const EXPERIMENTS: Experiment[] = [
     ]
   },
 
-  {
-    id: 'combustion-reaction',
-    title: 'Combustion Reaction',
-    description: 'Demonstrate the combustion of magnesium in the presence of oxygen.',
-    difficulty: 'intermediate',
-    duration: 15,
-    category: 'gas-evolution',
-    objectives: [
-      'Understand combustion reactions',
-      'Observe the products of complete combustion',
-      'Learn about exothermic reactions'
-    ],
-    materials: [
-      { equipmentType: 'bunsen-burner', quantity: 1, required: true },
-      { equipmentType: 'other', quantity: 1, required: true }
-    ],
-    chemicals: [],
-    steps: [
-      {
-        id: 'step1',
-        instruction: 'Set up Bunsen burner with gas supply',
-        equipment: ['bunsen-burner'],
-        chemicals: ['ch4'],
-        action: 'observe',
-        expectedObservation: 'Gas line connected to burner',
-        completed: false
-      },
-      {
-        id: 'step2',
-        instruction: 'Light the Bunsen burner and adjust flame',
-        equipment: ['bunsen-burner'],
-        chemicals: ['ch4', 'o2'],
-        action: 'heat',
-        expectedObservation: 'Blue flame appears',
-        completed: false
-      },
-      {
-        id: 'step3',
-        instruction: 'Position combustion spoon with magnesium near flame',
-        equipment: ['bunsen-burner', 'other'],
-        chemicals: ['mg', 'o2'],
-        action: 'heat',
-        expectedObservation: 'Magnesium ribbon glows and burns',
-        completed: false
-      },
-      {
-        id: 'step4',
-        instruction: 'Observe bright white flame and white smoke',
-        equipment: ['bunsen-burner'],
-        chemicals: ['mgo'],
-        action: 'observe',
-        expectedObservation: 'Bright white light and white magnesium oxide smoke',
-        completed: false
-      }
-    ],
-    safetyNotes: [
-      'Never look directly at burning magnesium',
-      'Wear protective goggles',
-      'Keep flammable materials away from flame',
-      'Never leave flame unattended'
-    ],
-    expectedResults: [
-      'Bright white flame indicating combustion',
-      'Production of magnesium oxide',
-      'Heat and light energy released'
-    ],
-    reactions: [
-      {
-        id: 'combustion',
-        reactants: ['mg', 'o2'],
-        products: ['mgo'],
-        equation: '2Mg + O₂ → 2MgO',
-        conditions: { temperature: 3000 },
-        effects: [
-          {
-            type: 'heat-release',
-            intensity: 0.9,
-            duration: 4000
-          },
-          {
-            type: 'smoke',
-            intensity: 1.0,
-            duration: 3000,
-            color: '#FFFFFF'
-          }
-        ]
-      }
-    ]
-  },
 
   {
     id: 'decomposition-reaction',
@@ -501,6 +412,83 @@ export const EXPERIMENTS: Experiment[] = [
             intensity: 0.8,
             duration: 2000,
             color: '#FFFFFF' // Colorless
+          }
+        ]
+      }
+    ]
+  },
+  
+  {
+    id: 'permanganate-reduction',
+    title: 'Permanganate Reduction Reaction',
+    description: 'Demonstrate the reduction of potassium permanganate with oxalic acid in acidic solution.',
+    difficulty: 'intermediate',
+    duration: 15,
+    category: 'redox',
+    objectives: [
+      'Understand redox reactions',
+      'Observe color changes during reduction',
+      'Learn about permanganate as an oxidizing agent'
+    ],
+    materials: [
+      { equipmentType: 'beaker', quantity: 1, required: true },
+      { equipmentType: 'graduated-cylinder', quantity: 3, required: true }
+    ],
+    chemicals: [],
+    steps: [
+      {
+        id: 'step1',
+        instruction: 'Add potassium permanganate solution to the beaker',
+        equipment: ['beaker'],
+        chemicals: ['kmno4'],
+        action: 'pour',
+        expectedObservation: 'Beaker fills with purple solution',
+        completed: false
+      },
+      {
+        id: 'step2',
+        instruction: 'Add dilute sulfuric acid to the beaker',
+        equipment: ['beaker'],
+        chemicals: ['h2so4'],
+        action: 'pour',
+        expectedObservation: 'No immediate color change (just sets acidic medium)',
+        completed: false
+      },
+      {
+        id: 'step3',
+        instruction: 'Add oxalic acid solution to the beaker',
+        equipment: ['beaker'],
+        chemicals: ['oxalic-acid'],
+        action: 'pour',
+        expectedObservation: 'Solution should fade from purple → pale pink slowly (8–10 sec)',
+        completed: false
+      }
+    ],
+    safetyNotes: [
+      'Wear safety goggles and gloves',
+      'Handle potassium permanganate carefully - it stains skin and clothing',
+      'Sulfuric acid is corrosive - avoid skin contact',
+      'Work in well-ventilated area',
+      'Oxalic acid is toxic - avoid ingestion'
+    ],
+    expectedResults: [
+      'Color change from purple to pale pink',
+      'Smooth color transition over 8-10 seconds',
+      'Final solution is almost colorless'
+    ],
+    reactions: [
+      {
+        id: 'permanganate-reduction',
+        reactants: ['kmno4', 'h2so4', 'oxalic-acid'],
+        products: ['mn2+', 'co2', 'h2o'],
+        equation: '2KMnO₄ + 5H₂C₂O₄ + 3H₂SO₄ → 2MnSO₄ + 10CO₂ + 8H₂O',
+        conditions: { temperature: 25 },
+        effects: [
+          {
+            type: 'color-change',
+            intensity: 1.0,
+            duration: 9000, // 9 seconds for full transition to match requirement
+            color: '#FFF5FA' // Final color: almost colorless/pale pink
           }
         ]
       }

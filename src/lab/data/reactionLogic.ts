@@ -124,6 +124,26 @@ export function generateReactionLogic(experiments: Experiment[]): ReactionLogic 
       }
       console.log('💨 Added decomposition reaction:', decompositionKey)
     }
+    
+    
+    // Special case for Permanganate Reduction Reaction
+    if (experiment.id === 'permanganate-reduction') {
+      // Add a special reaction for the Permanganate Reduction Reaction effect
+      const permanganateReductionKey = `${experiment.id}-reduction`
+      reactionLogic[permanganateReductionKey] = {
+        requiredChemicals: ['kmno4', 'h2so4', 'oxalic-acid'],
+        effects: [
+          {
+            type: 'color-change',
+            intensity: 1.0,
+            duration: 9000, // 9 seconds for full transition to match requirement
+            color: '#FFF5FA' // Final color: almost colorless/pale pink
+          }
+        ],
+        outcomeText: 'KMnO4 reduced to Mn2+ (solution becomes pale pink / nearly colorless)'
+      }
+      console.log('🧪 Added Permanganate Reduction Reaction:', permanganateReductionKey)
+    }
   })
   
   return reactionLogic
@@ -200,3 +220,27 @@ export function checkReactionTrigger(
   
   return null
 }
+
+// Function to get the color for permanganate reduction reaction based on chemicals present
+export const getPermanganateReductionColor = (chemicals: string[]) => {
+  const hasKMnO4 = chemicals.includes('kmno4');
+  const hasH2SO4 = chemicals.includes('h2so4');
+  const hasOxalicAcid = chemicals.includes('oxalic-acid');
+  
+  // Initial state: purple KMnO4
+  if (hasKMnO4 && !hasH2SO4 && !hasOxalicAcid) {
+    return '#9D27B0'; // Purple
+  }
+  
+  // After adding H2SO4: remains purple
+  if (hasKMnO4 && hasH2SO4 && !hasOxalicAcid) {
+    return '#9D27B0'; // Still purple
+  }
+  
+  // After adding oxalic acid: will transition (handled by animation)
+  if (hasKMnO4 && hasH2SO4 && hasOxalicAcid) {
+    return '#9D27B0'; // Starting purple (fade animation takes over)
+  }
+  
+  return '#9D27B0'; // Default purple
+};

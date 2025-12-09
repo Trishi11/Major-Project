@@ -41,135 +41,109 @@ export default function ReactionEffect({
     // Use effects data if provided, otherwise fallback to reactionType
     const effectType = effects && effects.length > 0 ? effects[0].type : reactionType
     const particleCount = effectType === 'gas-evolution' || effectType === 'boiling' ? 250 : 
-                           effectType === 'precipitation' ? 200 : // Increased particles for more realistic precipitation
-                           effectType === 'smoke' ? 100 : 50; // Fixed particle count
+                         effectType === 'precipitation' ? 40 : // Reduced particles for realistic streaks
+                         effectType === 'smoke' ? 100 : 50; // Fixed particle count
+    
+    const positions = new Float32Array(particleCount * 3)
+    const velocities = new Float32Array(particleCount * 3)
+    const colors = new Float32Array(particleCount * 3)
+    const sizes = new Float32Array(particleCount)
+
+    for (let i = 0; i < particleCount; i++) {
+      const i3 = i * 3
       
-      const positions = new Float32Array(particleCount * 3)
-      const velocities = new Float32Array(particleCount * 3)
-      const colors = new Float32Array(particleCount * 3)
-      const sizes = new Float32Array(particleCount)
+      // Position particles at reaction center
+      positions[i3] = position[0] + (Math.random() - 0.5) * 0.3
+      positions[i3 + 1] = position[1] + Math.random() * 0.2
+      positions[i3 + 2] = position[2] + (Math.random() - 0.5) * 0.3
 
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3
-        
-        // Position particles at reaction center
-        positions[i3] = position[0] + (Math.random() - 0.5) * 0.5
-        positions[i3 + 1] = position[1] + Math.random() * 0.3
-        positions[i3 + 2] = position[2] + (Math.random() - 0.5) * 0.5
-
-        // Reaction-specific velocities
-        switch (effectType) {
-          case 'gas-evolution':
-            velocities[i3] = (Math.random() - 0.5) * 0.03
-            velocities[i3 + 1] = Math.random() * 0.08 + 0.03 // Upward
-            velocities[i3 + 2] = (Math.random() - 0.5) * 0.03
-            break
-          case 'boiling':
-            velocities[i3] = (Math.random() - 0.5) * 0.02
-            velocities[i3 + 1] = Math.random() * 0.06 + 0.02 // Vigorous upward
-            velocities[i3 + 2] = (Math.random() - 0.5) * 0.02
-            break
-          case 'precipitation':
-            velocities[i3] = (Math.random() - 0.5) * 0.015 // More horizontal movement for floating effect
-            velocities[i3 + 1] = -Math.random() * 0.02 // Slower settling for suspension effect
-            velocities[i3 + 2] = (Math.random() - 0.5) * 0.015 // More horizontal movement for floating effect
-            break
-          case 'heat-release':
-            velocities[i3] = (Math.random() - 0.5) * 0.04
-            velocities[i3 + 1] = Math.random() * 0.05 + 0.01
-            velocities[i3 + 2] = (Math.random() - 0.5) * 0.04
-            break
-          case 'smoke':
-            velocities[i3] = (Math.random() - 0.5) * 0.01
-            velocities[i3 + 1] = Math.random() * 0.02 + 0.01 // Slow upward
-            velocities[i3 + 2] = (Math.random() - 0.5) * 0.01
-            break
-          default:
-            velocities[i3] = (Math.random() - 0.5) * 0.02
-            velocities[i3 + 1] = Math.random() * 0.03
-            velocities[i3 + 2] = (Math.random() - 0.5) * 0.02
-        }
-
-        // Reaction-specific colors
-        switch (effectType) {
-          case 'acid-base':
-            // Pink to colorless transition for phenolphthalein
-            colors[i3] = 1.0 // Red
-            colors[i3 + 1] = 0.3 + Math.random() * 0.5 // Green
-            colors[i3 + 2] = 0.6 + Math.random() * 0.4 // Blue
-            break
-          case 'precipitation':
-            // Enhanced off-white color for silver chloride precipitate with opaque effect
-            if (i < particleCount * 0.4) {
-              // Primary particles - pure white for opaque effect
-              colors[i3] = 1.0 // Pure white
-              colors[i3 + 1] = 1.0
-              colors[i3 + 2] = 1.0
-            } else if (i < particleCount * 0.7) {
-              // Secondary particles - pure white for consistency
-              colors[i3] = 1.0 // Pure white
-              colors[i3 + 1] = 1.0
-              colors[i3 + 2] = 1.0
-            } else {
-              // Tertiary particles - pure white for consistency
-              colors[i3] = 1.0 // Pure white
-              colors[i3 + 1] = 1.0
-              colors[i3 + 2] = 1.0
-            }
-            break;
-          case 'gas-evolution':
-            // More realistic oxygen bubble colors (slightly blue-tinted)
-            colors[i3] = 0.95 + Math.random() * 0.05 // Light gray with slight blue tint
-            colors[i3 + 1] = 0.95 + Math.random() * 0.05
-            colors[i3 + 2] = 0.98 + Math.random() * 0.02 // Slight blue tint for oxygen
-            break
-          case 'boiling':
-            colors[i3] = 0.8 + Math.random() * 0.2 // Light blue/white
-            colors[i3 + 1] = 0.8 + Math.random() * 0.2
-            colors[i3 + 2] = 0.9 + Math.random() * 0.1
-            break
-          case 'heat-release':
-            colors[i3] = 1.0 // Red-orange
-            colors[i3 + 1] = 0.4 + Math.random() * 0.3
-            colors[i3 + 2] = 0.1
-            break
-          case 'smoke':
-            colors[i3] = 0.7 + Math.random() * 0.3 // Gray
-            colors[i3 + 1] = 0.7 + Math.random() * 0.3
-            colors[i3 + 2] = 0.7 + Math.random() * 0.3
-            break
-          case 'color-change':
-            // Dynamic color change
-            colors[i3] = Math.random()
-            colors[i3 + 1] = Math.random()
-            colors[i3 + 2] = Math.random()
-            break
-          default:
-            colors[i3] = Math.random()
-            colors[i3 + 1] = Math.random()
-            colors[i3 + 2] = Math.random()
-        }
-
-        // Variable sizes for more realistic particles
-        if (effectType === 'precipitation') {
-          // Multi-layer particle sizes for enhanced precipitation effect
-          if (i < particleCount * 0.4) {
-            // Primary particles - larger for visibility
-            sizes[i] = Math.random() * 0.12 + 0.05
-          } else if (i < particleCount * 0.7) {
-            // Secondary particles - medium for shimmer effect
-            sizes[i] = Math.random() * 0.07 + 0.025
-          } else {
-            // Tertiary particles - small for subtle texture
-            sizes[i] = Math.random() * 0.035 + 0.012
-          }
-        } else {
-          sizes[i] = Math.random() * 0.1 + 0.015 // Optimized range for other particles
-        }
+      // Reaction-specific velocities
+      switch (effectType) {
+        case 'gas-evolution':
+          velocities[i3] = (Math.random() - 0.5) * 0.03
+          velocities[i3 + 1] = Math.random() * 0.08 + 0.03 // Upward
+          velocities[i3 + 2] = (Math.random() - 0.5) * 0.03
+          break
+        case 'boiling':
+          velocities[i3] = (Math.random() - 0.5) * 0.02
+          velocities[i3 + 1] = Math.random() * 0.06 + 0.02 // Vigorous upward
+          velocities[i3 + 2] = (Math.random() - 0.5) * 0.02
+          break
+        case 'precipitation':
+          velocities[i3] = (Math.random() - 0.5) * 0.01 // Less horizontal movement
+          velocities[i3 + 1] = -Math.random() * 0.02 // Slower settling
+          velocities[i3 + 2] = (Math.random() - 0.5) * 0.01 // Less horizontal movement
+          break
+        case 'heat-release':
+          velocities[i3] = (Math.random() - 0.5) * 0.04
+          velocities[i3 + 1] = Math.random() * 0.05 + 0.01
+          velocities[i3 + 2] = (Math.random() - 0.5) * 0.04
+          break
+        case 'smoke':
+          velocities[i3] = (Math.random() - 0.5) * 0.01
+          velocities[i3 + 1] = Math.random() * 0.02 + 0.01 // Slow upward
+          velocities[i3 + 2] = (Math.random() - 0.5) * 0.01
+          break
+        default:
+          velocities[i3] = (Math.random() - 0.5) * 0.02
+          velocities[i3 + 1] = Math.random() * 0.03
+          velocities[i3 + 2] = (Math.random() - 0.5) * 0.02
       }
 
-      return { positions, velocities, colors, sizes, particleCount }
-    }, [reactionType, position, effects])
+      // Reaction-specific colors
+      switch (effectType) {
+        case 'acid-base':
+          // Pink to colorless transition for phenolphthalein
+          colors[i3] = 1.0 // Red
+          colors[i3 + 1] = 0.3 + Math.random() * 0.5 // Green
+          colors[i3 + 2] = 0.6 + Math.random() * 0.4 // Blue
+          break
+        case 'precipitation':
+          // Off-white color for silver chloride precipitate
+          colors[i3] = 0.97 + Math.random() * 0.03 // Off-white
+          colors[i3 + 1] = 0.97 + Math.random() * 0.03
+          colors[i3 + 2] = 0.97 + Math.random() * 0.03
+          break;
+        case 'gas-evolution':
+          // More realistic oxygen bubble colors (slightly blue-tinted)
+          colors[i3] = 0.95 + Math.random() * 0.05 // Light gray with slight blue tint
+          colors[i3 + 1] = 0.95 + Math.random() * 0.05
+          colors[i3 + 2] = 0.98 + Math.random() * 0.02 // Slight blue tint for oxygen
+          break
+        case 'boiling':
+          colors[i3] = 0.8 + Math.random() * 0.2 // Light blue/white
+          colors[i3 + 1] = 0.8 + Math.random() * 0.2
+          colors[i3 + 2] = 0.9 + Math.random() * 0.1
+          break
+        case 'heat-release':
+          colors[i3] = 1.0 // Red-orange
+          colors[i3 + 1] = 0.4 + Math.random() * 0.3
+          colors[i3 + 2] = 0.1
+          break
+        case 'smoke':
+          colors[i3] = 0.7 + Math.random() * 0.3 // Gray
+          colors[i3 + 1] = 0.7 + Math.random() * 0.3
+          colors[i3 + 2] = 0.7 + Math.random() * 0.3
+          break
+        case 'color-change':
+          // Dynamic color change
+          colors[i3] = Math.random()
+          colors[i3 + 1] = Math.random()
+          colors[i3 + 2] = Math.random()
+          break
+        default:
+          colors[i3] = Math.random()
+          colors[i3 + 1] = Math.random()
+          colors[i3 + 2] = Math.random()
+      }
+
+      // Variable sizes for more realistic bubbles
+      sizes[i] = effectType === 'precipitation' ? Math.random() * 0.06 + 0.02 : // Larger for precipitate streaks
+                Math.random() * 0.1 + 0.015 // Optimized range for other particles
+    }
+
+    return { positions, velocities, colors, sizes, particleCount }
+  }, [reactionType, position, effects])
 
   useFrame(({ clock }) => {
     if (!isActive) return
@@ -230,32 +204,20 @@ export default function ReactionEffect({
             break;
           case 'precipitation':
             // Slower settling with slight horizontal movement for floating streaks
-            particleData.velocities[i3] *= 0.9; // Gentle horizontal movement
-            particleData.velocities[i3 + 1] -= 0.002; // Very slow settling
-            particleData.velocities[i3 + 2] *= 0.9; // Gentle horizontal movement
+            particleData.velocities[i3] *= 0.95; // Gentle horizontal movement
+            particleData.velocities[i3 + 1] -= 0.005; // Slow settling
+            particleData.velocities[i3 + 2] *= 0.95; // Gentle horizontal movement
             
             // Add slight Brownian motion for realistic suspension
-            if (Math.random() > 0.5) {
-              particleData.velocities[i3] += (Math.random() - 0.5) * 0.02;
-              particleData.velocities[i3 + 2] += (Math.random() - 0.5) * 0.02;
+            if (Math.random() > 0.7) {
+              particleData.velocities[i3] += (Math.random() - 0.5) * 0.01;
+              particleData.velocities[i3 + 2] += (Math.random() - 0.5) * 0.01;
             }
             
             // Settling boundary - particles settle at the bottom
             if (positions[i3 + 1] < position[1] - 0.3) {
               particleData.velocities[i3 + 1] = 0;
               positions[i3 + 1] = position[1] - 0.3 + Math.random() * 0.02;
-            }
-            
-            // Contain particles within beaker walls
-            const distanceFromCenter = Math.sqrt(
-              Math.pow(positions[i3] - position[0], 2) + 
-              Math.pow(positions[i3 + 2] - position[2], 2)
-            );
-            if (distanceFromCenter > 0.6) {
-              // Push particles back toward center
-              const angle = Math.atan2(positions[i3 + 2] - position[2], positions[i3] - position[0]);
-              positions[i3] = position[0] + Math.cos(angle) * 0.55;
-              positions[i3 + 2] = position[2] + Math.sin(angle) * 0.55;
             }
             break;
           case 'heat-release':
@@ -274,9 +236,44 @@ export default function ReactionEffect({
 
         // Color changes over time for color-change reactions
         if (effectType === 'color-change') {
-          colors[i3] = Math.sin(elapsed * 3 + i) * 0.5 + 0.5
-          colors[i3 + 1] = Math.cos(elapsed * 4 + i) * 0.5 + 0.5
-          colors[i3 + 2] = Math.sin(elapsed * 5 + i) * 0.5 + 0.5
+          // Check if this is the KMnO4 reduction reaction
+          const isKMnO4Reduction = chemicals.includes('kmno4') && chemicals.includes('h2so4') && chemicals.includes('oxalic-acid');
+                
+          if (isKMnO4Reduction) {
+            // Special color transition for KMnO4 reduction
+            // Purple (#4B007D) → Pale pink (#F2C9DA) → Almost colorless (#FFF5FA)
+            const startColor = { r: 0x4B/255, g: 0x00/255, b: 0x7D/255 };
+            const midColor = { r: 0xF2/255, g: 0xC9/255, b: 0xDA/255 };
+            const endColor = { r: 0xFF/255, g: 0xF5/255, b: 0xFA/255 };
+                  
+            let targetColor;
+            if (progress < 0.5) {
+              // First half: purple to pale pink
+              const t = progress * 2; // Scale to 0-1
+              targetColor = {
+                r: startColor.r + (midColor.r - startColor.r) * t,
+                g: startColor.g + (midColor.g - startColor.g) * t,
+                b: startColor.b + (midColor.b - startColor.b) * t
+              };
+            } else {
+              // Second half: pale pink to almost colorless
+              const t = (progress - 0.5) * 2; // Scale to 0-1
+              targetColor = {
+                r: midColor.r + (endColor.r - midColor.r) * t,
+                g: midColor.g + (endColor.g - midColor.g) * t,
+                b: midColor.b + (endColor.b - midColor.b) * t
+              };
+            }
+                  
+            colors[i3] = targetColor.r;
+            colors[i3 + 1] = targetColor.g;
+            colors[i3 + 2] = targetColor.b;
+          } else {
+            // Default color change
+            colors[i3] = Math.sin(elapsed * 3 + i) * 0.5 + 0.5
+            colors[i3 + 1] = Math.cos(elapsed * 4 + i) * 0.5 + 0.5
+            colors[i3 + 2] = Math.sin(elapsed * 5 + i) * 0.5 + 0.5
+          }
         }
         
         // Fade out particles over time
@@ -321,8 +318,40 @@ export default function ReactionEffect({
           material.color.setRGB(1.0, 1.0, 1.0) // Colorless for acid
         }
       } else {
-        const hue = (elapsed * 0.3) % 1
-        material.color.setHSL(hue, 0.8, 0.6)
+        // Check if this is the KMnO4 reduction reaction
+        const isKMnO4Reduction = chemicals.includes('kmno4') && chemicals.includes('h2so4') && chemicals.includes('oxalic-acid');
+        
+        if (isKMnO4Reduction) {
+          // Special color transition for KMnO4 reduction
+          // Purple (#4B007D) → Pale pink (#F2C9DA) → Almost colorless (#FFF5FA)
+          const startColor = { r: 0x4B/255, g: 0x00/255, b: 0x7D/255 };
+          const midColor = { r: 0xF2/255, g: 0xC9/255, b: 0xDA/255 };
+          const endColor = { r: 0xFF/255, g: 0xF5/255, b: 0xFA/255 };
+          
+          let targetColor;
+          if (progress < 0.5) {
+            // First half: purple to pale pink
+            const t = progress * 2; // Scale to 0-1
+            targetColor = {
+              r: startColor.r + (midColor.r - startColor.r) * t,
+              g: startColor.g + (midColor.g - startColor.g) * t,
+              b: startColor.b + (midColor.b - startColor.b) * t
+            };
+          } else {
+            // Second half: pale pink to almost colorless
+            const t = (progress - 0.5) * 2; // Scale to 0-1
+            targetColor = {
+              r: midColor.r + (endColor.r - midColor.r) * t,
+              g: midColor.g + (endColor.g - midColor.g) * t,
+              b: midColor.b + (endColor.b - midColor.b) * t
+            };
+          }
+          
+          material.color.setRGB(targetColor.r, targetColor.g, targetColor.b);
+        } else {
+          const hue = (elapsed * 0.3) % 1
+          material.color.setHSL(hue, 0.8, 0.6)
+        }
       }
       material.opacity = 0.4 + Math.sin(elapsed * 4) * 0.1
     }
@@ -448,7 +477,7 @@ export default function ReactionEffect({
         <mesh ref={colorChangeRef} scale={[0.8, 0.2, 0.8]} position={[0, 0.1, 0]}>
           <cylinderGeometry args={[1, 1, 1, 32]} />
           <meshBasicMaterial
-            color={currentEffectType === 'acid-base' ? "#ff69b4" : "#ff00ff"}
+            color={currentEffectType === 'acid-base' ? "#ff69b4" : "#4B007D"}
             transparent
             opacity={0.4}
           />

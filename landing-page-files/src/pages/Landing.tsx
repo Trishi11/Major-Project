@@ -369,18 +369,18 @@ const Landing = () => {
             <div>
               <h4 className="text-foreground font-semibold mb-4">Menu</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-primary transition-colors">Home</a></li>
+                <li><a href="#" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="hover:text-primary transition-colors">Home</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Pricing</a></li>
-                <li><a href="#about" className="hover:text-primary transition-colors">About us</a></li>
+                <li><a href="#about-section" className="hover:text-primary transition-colors">About us</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-foreground font-semibold mb-4">Feedback</h4>
+              <h4 className="text-foreground font-semibold mb-4">Connect</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-primary transition-colors">Linkedin</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Twitter</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Support</a></li>
+                <li><a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Facebook</a></li>
+                <li><a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a></li>
+                <li><a href="" onClick={() => window.location.reload()} className="hover:text-primary transition-colors">Website</a></li>
               </ul>
             </div>
             <div>
@@ -390,10 +390,7 @@ const Landing = () => {
               </ul>
             </div>
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Beaker className="w-6 h-6 text-primary" />
-                <span className="text-foreground font-bold">Virtual Chemistry Lab</span>
-              </div>
+              <h4 className="text-foreground font-bold mb-4">Virtual Chemistry Lab</h4>
               <p className="text-muted-foreground text-sm">
                 123 Lab Street<br />
                 Science City, SC 12345<br />
